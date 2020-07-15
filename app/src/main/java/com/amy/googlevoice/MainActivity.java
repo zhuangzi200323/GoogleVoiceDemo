@@ -15,8 +15,10 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,9 +26,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.cloud.dialogflow.v2.DetectIntentResponse;
+import com.google.cloud.dialogflow.v2.QueryInput;
+import com.google.cloud.dialogflow.v2.SessionName;
+import com.google.cloud.dialogflow.v2.SessionsClient;
+import com.google.cloud.dialogflow.v2.SessionsSettings;
+import com.google.cloud.dialogflow.v2.TextInput;
+
+
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements MessageDialogFragment.Listener{
+    private static final String TAG = MainActivity.class.getSimpleName();
     private static final String FRAGMENT_MESSAGE_DIALOG = "message_dialog";
 
     private static final String STATE_RESULTS = "results";
@@ -109,6 +125,64 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
                 savedInstanceState.getStringArrayList(STATE_RESULTS);
         mAdapter = new ResultAdapter(results);
         mRecyclerView.setAdapter(mAdapter);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                initV2Chatbot();
+            }
+        }).start();
+    }
+
+    private void testDialogflow(String msg) {
+        QueryInput queryInput = QueryInput.newBuilder()
+                .setText(TextInput.newBuilder()
+                        .setText(msg)
+                        .setLanguageCode("en-US"))
+                .build();
+        new RequestJavaV2Task(MainActivity.this, session, sessionsClient, queryInput).execute();
+    }
+
+    // Java V2
+    private SessionsClient sessionsClient;
+    private SessionName session;
+    private String uuid = UUID.randomUUID().toString();
+    private void initV2Chatbot() {
+        try {
+            InputStream stream = getResources().openRawResource(R.raw.amytest_c4f8340a901e);
+            GoogleCredentials credentials = GoogleCredentials.fromStream(stream);
+            String projectId = ((ServiceAccountCredentials)credentials).getProjectId();
+
+            SessionsSettings.Builder settingsBuilder = SessionsSettings.newBuilder();
+            SessionsSettings sessionsSettings = settingsBuilder.setCredentialsProvider(FixedCredentialsProvider.create(credentials)).build();
+            sessionsClient = SessionsClient.create(sessionsSettings);
+            session = SessionName.of(projectId, uuid);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void callbackV2(DetectIntentResponse response) {
+        if (response != null) {
+            // process aiResponse here
+            final String botReply = response.getQueryResult().getFulfillmentText();
+            Log.d(TAG, "V2 Bot Reply: " + botReply);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mAdapter.addResult(botReply);
+                    mRecyclerView.smoothScrollToPosition(0);
+                }
+            });
+        } else {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mAdapter.addResult("dialogflow return null");
+                    mRecyclerView.smoothScrollToPosition(0);
+                }
+            });
+            Log.d(TAG, "Bot Reply: Null");
+        }
     }
 
     @Override
@@ -178,6 +252,7 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
         switch (item.getItemId()) {
             case R.id.action_file:
                 mSpeechService.recognizeInputStream(getResources().openRawResource(R.raw.audio));
+                testDialogflow("I know how to code in java");
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -234,6 +309,7 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
                                 if (isFinal) {
                                     mText.setText(null);
                                     mAdapter.addResult(text);
+                                    testDialogflow(text);
                                     mRecyclerView.smoothScrollToPosition(0);
                                 } else {
                                     mText.setText(text);
