@@ -2,12 +2,12 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.protobuf'
 
 ext {
-    grpcVersion = '1.24.0'
+    grpcVersion = '1.30.2'
 }
 
 android {
     compileSdkVersion 29
-    buildToolsVersion "29.0.0"
+    buildToolsVersion "29.0.3"
     defaultConfig {
         applicationId "com.amy.googlevoice"
         minSdkVersion 21
@@ -15,19 +15,6 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-    flavorDimensions "version"
-    productFlavors {
-        dev {
-            dimension "version"
-            // Minimum version with platform multi-dex support
-            minSdkVersion 21
-        }
-        prod {
-            dimension "version"
-            // Minimum version that can run gRPC (TLS extension)
-            minSdkVersion 16
-        }
     }
     buildTypes {
         release {
@@ -38,29 +25,57 @@ android {
     configurations.all {
         resolutionStrategy.force 'com.google.code.findbugs:jsr305:3.0.2'
     }
+    // Java V2
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/INDEX.LIST'
+        //https://stackoverflow.com/questions/47298895/more-than-one-file-was-found-with-os-independent-path-protobuf-meta
+        pickFirst 'field_mask.proto' //More than one file was found with OS independent path 'google/protobuf/field_mask.proto'.
+    }
 }
-
 
 protobuf {
     protoc {
-        artifact = 'com.google.protobuf:protoc:3.10.0'
+        artifact = 'com.google.protobuf:protoc:3.12.2'
     }
     plugins {
-        javalite {
-            artifact = "com.google.protobuf:protoc-gen-javalite:3.0.0"
-        }
+//        javalite {
+//            artifact = "com.google.protobuf:protoc-gen-javalite:3.0.0"
+//        }
         grpc {
             artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
         }
     }
     generateProtoTasks {
         all().each { task ->
+            task.builtins {
+                //Caused by: java.lang.VerifyError: Verifier rejected class com.google.cloud.dialogflow.v2.DetectIntentRequest$Builder:
+                // com.google.protobuf.SingleFieldBuilderV3 com.google.cloud.dialogflow.v2.DetectIntentRequest$Builder
+                // .getOutputAudioConfigMaskFieldBuilder() failed to verify: com.google.protobuf.SingleFieldBuilderV3
+                // com.google.cloud.dialogflow.v2.DetectIntentRequest$Builder.getOutputAudioConfigMaskFieldBuilder(): [0x12] register v1
+                // has type Precise Reference: com.google.protobuf.FieldMask but expected Reference: com.google.protobuf.AbstractMessageVerifier
+                // rejected class com.google.cloud.dialogflow.v2.DetectIntentRequest$Builder: com.google.cloud.dialogflow.v2
+                // .DetectIntentRequest$Builder com.google.cloud.dialogflow.v2.DetectIntentRequest$Builder
+                // .mergeOutputAudioConfigMask(com.google.protobuf.FieldMask) failed to verify: com.google.cloud.dialogflow.v2.DetectIntentRequest$Builder
+                // com.google.cloud.dialogflow.v2.DetectIntentRequest$Builder.mergeOutputAudioConfigMask(com.google.protobuf.FieldMask):
+                // [0x1E] register v2 has type Precise Reference: com.google.protobuf.FieldMask but expected Reference: com.google.protobuf.AbstractMessage
+                //com.google.cloud.dialogflow.v2.DetectIntentRequest$Builder com.google.cloud.dialogflow.v2.DetectIntentRequest$Builder
+                // .setOutputAudioConfigMask(com.google.protobuf.FieldMask) failed to verify: com.google.cloud.dialogflow.v2.DetectIntentRequest$Builder
+                // com.google.cloud.dialogflow.v2.DetectIntentRequest$Builder.setOutputAudioConfigMask(com.google.protobuf.FieldMask): [0xE] register
+                // v2 has type Precise Reference: com.google.protobuf.FieldMask but expected Reference: com.google.protobuf.AbstractMessage
+                // (declaration of 'com.google.cloud.dialogflow.v2.DetectIntentRequest$Builder' appears in /data/app/com.amy.googlevoice-1/base.apk)
+                //at com.google.cloud.dialogflow.v2.DetectIntentRequest.toBuilder(DetectIntentRequest.java:717)
+                //at com.google.cloud.dialogflow.v2.DetectIntentRequest.newBuilder(DetectIntentRequest.java:708)
+                //at com.amy.googlevoice.RequestJavaV2Task.doInBackground(RequestJavaV2Task.java:31)
+                //java { option 'lite' } //使用option: 'lite'时会报上方错误
+                java {}
+            }
             task.plugins {
-                javalite {}
                 grpc {
                     // Options added to --grpc_out
                     option 'lite'
-                    option 'enable_deprecated=false'
+                    //option 'enable_deprecated=false'
                 }
             }
         }
@@ -74,19 +89,22 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    // Java V2 0.110.0-alpha及之后的几个版本使用了protobuf-java:3.10.0(android O min-api>=26才可以用)，最新版本已经没有min-api限制
+    implementation('com.google.cloud:google-cloud-dialogflow:2.1.0')
     // gRPC
     implementation "io.grpc:grpc-okhttp:$grpcVersion"
-    implementation "io.grpc:grpc-protobuf-lite:$grpcVersion"
+    implementation("io.grpc:grpc-protobuf-lite:$grpcVersion"){
+        exclude group: 'com.google.protobuf' //不导入protobuf，google-cloud-dialogflow会自动引入
+    }
     implementation "io.grpc:grpc-stub:$grpcVersion"
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
-    protobuf 'com.google.protobuf:protobuf-java:3.9.2'
-
+    protobuf 'com.google.protobuf:protobuf-java:3.12.2'
     // OAuth2 for Google API
-    implementation('com.google.auth:google-auth-library-oauth2-http:0.18.0') {
+    implementation('com.google.auth:google-auth-library-oauth2-http:0.20.0') {
         exclude module: 'httpclient'
     }
-    implementation 'androidx.recyclerview:recyclerview:1.0.0'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation 'androidx.cardview:cardview:1.0.0'
-    implementation 'com.google.android.material:material:1.0.0'
+    implementation 'com.google.android.material:material:1.1.0'
     implementation 'androidx.appcompat:appcompat:1.1.0'
 }
