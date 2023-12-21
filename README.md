@@ -12,9 +12,9 @@
    ![](./images/5.png)
    ![](./images/6.png)
 3. 基本流程如下
-## 设置Google Cloud 项目
-## 确保有一个结算账号关联到该项目
-## 启用 Speech-to-Text API
-## 创建新的服务账号
-## 创建JSON密钥
-## 设置身份验证环境变量
+* 设置Google Cloud 项目
+* 确保有一个结算账号关联到该项目
+* 启用 Speech-to-Text API
+* 创建新的服务账号
+* 创建JSON密钥
+* 设置身份验证环境变量
