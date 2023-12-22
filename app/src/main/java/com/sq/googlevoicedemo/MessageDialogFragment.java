@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.amy.googlevoice;
+package com.sq.googlevoicedemo;
 
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -29,7 +29,7 @@ import androidx.appcompat.app.AppCompatDialogFragment;
  * A simple dialog with a message.
  *
  * <p>The calling {@link android.app.Activity} needs to implement {@link
- * MessageDialogFragment.Listener}.</p>
+ * Listener}.</p>
  */
 public class MessageDialogFragment extends AppCompatDialogFragment {
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.amy.googlevoice;
+package com.sq.googlevoicedemo;
 
 import android.app.Service;
 import android.content.Context;
@@ -350,7 +350,7 @@ public class SpeechService extends Service {
             // folder of this client app. You should never do this in your app. Instead, store
             // the file in your server and obtain an access token from there.
             // *******************
-            final InputStream stream = getResources().openRawResource(R.raw.credential);
+            final InputStream stream = getResources().openRawResource(R.raw.jackagent_hgeh_0d9b51ea974f);
             try {
                 final GoogleCredentials credentials = GoogleCredentials.fromStream(stream)
                         .createScoped(SCOPE);

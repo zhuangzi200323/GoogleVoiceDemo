@@ -1,4 +1,4 @@
-package com.amy.googlevoice;
+package com.sq.googlevoicedemo;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
     private String uuid = UUID.randomUUID().toString();
     private void initV2Chatbot() {
         try {
-            InputStream stream = getResources().openRawResource(R.raw.amytest_c4f8340a901e);
+            InputStream stream = getResources().openRawResource(R.raw.jackagent_hgeh_0d9b51ea974f);
             GoogleCredentials credentials = GoogleCredentials.fromStream(stream);
             String projectId = ((ServiceAccountCredentials)credentials).getProjectId();
 
@@ -249,14 +249,12 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_file:
-                mSpeechService.recognizeInputStream(getResources().openRawResource(R.raw.audio));
-                testDialogflow("I know how to code in java");
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (item.getItemId() == R.id.action_file) {
+            mSpeechService.recognizeInputStream(getResources().openRawResource(R.raw.audio));
+            testDialogflow("I know how to code in java");
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     private void startVoiceRecorder() {

@@ -1,4 +1,4 @@
-package com.amy.googlevoice;
+package com.sq.googlevoicedemo;
 
 import org.junit.Test;
 
