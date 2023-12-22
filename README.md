@@ -11,6 +11,8 @@
    ![](./images/4.png)
    ![](./images/5.png)
    ![](./images/6.png)
+3. 如果没有启用，会报如下错误
+   ![](./images/err.png)
 ---
 # 基本流程如下
 * 设置Google Cloud 项目
