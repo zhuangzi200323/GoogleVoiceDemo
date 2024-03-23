@@ -118,8 +118,25 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
-    // Java V2 0.110.0-alpha及之后的几个版本使用了protobuf-java:3.10.0(android O min-api>=26才可以用)，最新版本已经没有min-api限制
-    implementation('com.google.cloud:google-cloud-dialogflow:4.38.0')
+    // Java V2 0.110.0-alpha及之后的几个版本使用了protobuf-java:3.10.0(android O min-api>=26才可以用)，新版本已经没有min-api限制
+    implementation('com.google.cloud:google-cloud-dialogflow:4.24.0') {
+        exclude module: 'google-auth-library-oauth2-http'
+        exclude module: 'gax-grpc'
+        exclude module: 'gax'
+    }
+    // gax and gax-grpc: Only version 2.12.0 can be used on android 7,
+    // because newer versions use the java.time.Duration class, which is not available on android 7
+    implementation('com.google.api:gax:2.12.0') {
+        exclude module: 'google-auth-library-oauth2-http'
+    }
+    implementation('com.google.api:gax-grpc:2.12.0') {
+        exclude module: 'google-auth-library-oauth2-http'
+    }
+    // OAuth2 for Google API, Only version 1.1.0 can be used on android 7,
+    // because newer versions use the java.time.Duration class, which is not available on android 7
+    implementation('com.google.auth:google-auth-library-oauth2-http:1.1.0') {
+        exclude module: 'httpclient'
+    }
     // gRPC
     implementation "io.grpc:grpc-okhttp:$grpcVersion"
     implementation("io.grpc:grpc-protobuf-lite:$grpcVersion"){
@@ -129,10 +146,7 @@ dependencies {
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
     implementation "com.google.protobuf:protobuf-java:$protocVersion"
     //implementation "com.google.protobuf:protoc:$protocVersion"
-    // OAuth2 for Google API
-    implementation('com.google.auth:google-auth-library-oauth2-http:1.20.0') {
-        exclude module: 'httpclient'
-    }
+
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
     implementation 'androidx.cardview:cardview:1.0.0'
 }
