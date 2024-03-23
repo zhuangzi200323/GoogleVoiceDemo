@@ -4,7 +4,7 @@
 
 使用说明：
 1. 访问[https://console.cloud.google.com/welcome](https://console.cloud.google.com/welcome)，并使用google账号登录，选择项目后，搜索Cloud Speech-to-Text API，截图如下
-   ![](./images/1.png)
+   <img width="100%" src="https://github.com/zhuangzi200323/GoogleVoiceDemo/blob/master/images/1.png" alt=""></a>
 2. 点击启用，会出现添加结算信息的提示，按照步骤添加银行卡信息，之后就可以使用了
    ![](./images/2.png)
    ![](./images/3.png)
